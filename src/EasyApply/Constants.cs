@@ -79,15 +79,16 @@ namespace EasyApply
 
         public static readonly string IndeedLoginUrl = "https://www.indeed.com/account/login";
 
-        public static readonly string IndeedLoginCssID = "login-email-input";
+        public static readonly string IndeedLoginCssID = "ifl-InputFormField-ihl-useId-passport-webapp-1";
 
-        public static readonly string IndeedPasswordCssID = "login-password-input";
+        public static readonly string IndeedPasswordCssID = "ifl-InputFormField-ihl-useId-passport-webapp-1";
 
         /// <summary>
         /// Indeed Search Xpaths
         /// </summary>
 
-        public static readonly string IndeedContainerCssClass = "//a[contains(@class, 'result')]";
+        public static readonly string IndeedContainerCssClass = ".//div[contains(@class, 'job_seen_beacon')]";
+        public static readonly string IndeedContainerLinkClass = "//a[contains(@class, 'jcs-JobTitle')]";
 
         public static readonly string IndeedXpathAppliedTag = ".//div[@id='applied-snippet']";
 
@@ -95,7 +96,7 @@ namespace EasyApply
 
         public static readonly string IndeedXpathApplyButton = ".//button[@id='indeedApplyButton']";
 
-        public static readonly string IndeedXpathEasilyApply = ".//span[text()='Easily apply']";
+        public static readonly string IndeedXpathEasilyApply = ".//span[@data-testid='indeedApply']\n";
 
         public static readonly string IndeedXpathEasyResumeButton = ".//span[starts-with(., 'Apply with your Indeed Resume')]";
 
@@ -109,15 +110,15 @@ namespace EasyApply
 
         public static readonly string IndeedXpathJobSnippet = ".//div[@class='job-snippet']/ul/li";
 
-        public static readonly string IndeedNextSearchLink = "//a[@aria-label='Next']";
+        public static readonly string IndeedNextSearchLink = "//a[@aria-label='Next Page']";
 
         /// <summary>
         /// Indeed Application Headers
         /// </summary>
 
-        public static readonly string IndeedResumeHeader = "Add a resume";
+        public static readonly string IndeedResumeHeader = "Add a resume for the employer";
 
-        public static readonly string IndeedQuestionsHeader = "Questions from";
+        public static readonly string IndeedQuestionsHeader = "Answer these questions from the employer";
 
         public static readonly string IndeedPastExperienceHeader = "past job";
 
@@ -125,7 +126,9 @@ namespace EasyApply
 
         public static readonly string IndeedCoverLetterHeader = "supporting documents";
 
-        public static readonly string IndeedReviewHeader = "Please review your application";
+        public static readonly string IndeedLocationHeader = "Review your location details from your profile";
+
+        public static readonly string IndeedReviewApplicationHeader = "Please review your application";
 
         /// <summary>
         /// Indeed Application Xpaths
@@ -137,11 +140,14 @@ namespace EasyApply
 
         public static readonly string IndeedXpathHeader = "//h1[contains(@class, 'ia-BasePage-heading')]";
 
-        public static readonly string IndeedXpathPdfResume = "//div[contains(@class, 'resume-display-container')]";
+        //public static readonly string IndeedXpathPdfResume = "//div[contains(@class, 'resume-display-container')]";
+        public static readonly string IndeedXpathPdfResume = "//*[@data-testid='FileResumeCard-label']";
 
         public static readonly string IneedXpathWriteCoverLetterButton = ".//div[contains(@id, 'write-cover-letter-selection-card')]";
 
-        public static readonly string IndeedXpathContinueButton = "//button[contains(@class, 'ia-continueButton')]";
+        //public static readonly string IndeedXpathContinueButton = "//button[contains(@class, 'ia-Profile-Location-continue')]";
+        public static readonly string IndeedXpathContinueButton = "//button[span[text()='Continue']]";
+
 
         public static readonly string IndeedXpathQuestions = "//div[contains(@class, 'ia-Questions-item')]";
 

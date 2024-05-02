@@ -31,6 +31,7 @@ using EasyApply.Interfaces;
 using EasyApply.Models;
 using EasyApply.Utilities;
 using EasyAppy;
+using Microsoft.Extensions.Options;
 using OpenQA.Selenium;
 using OpenQA.Selenium.Chrome;
 using OpenQA.Selenium.Firefox;
@@ -55,9 +56,10 @@ namespace EasyApply.Factories
             {
                 case BrowserType.Chrome:
                     {
-                        if (!DependencyCheck.CheckChrome() ||
-                            !DependencyCheck.CheckGeckoDriver())
-                        {
+                        //if (!DependencyCheck.CheckChrome() ||
+                        //    !DependencyCheck.CheckGeckoDriver())
+                        if (!DependencyCheck.CheckChrome())
+                            {
                             if (Program.VerboseMode)
                             {
                                 Debug.WriteLine("[*] Do not meet Chrome \\ Gecko driver requirements:");
@@ -69,6 +71,9 @@ namespace EasyApply.Factories
                         }
 
                         var chromeOptions = new ChromeOptions();
+                        string userProfilePath = @"C:\\Users\\leony\\AppData\\Local\\Google\\Chrome\\User Data\\";
+
+                        chromeOptions.AddArgument($"--user-data-dir={userProfilePath}");
 
                         if ((bool)browser?.Headless)
                             chromeOptions.AddArguments("--headless");
@@ -82,12 +87,15 @@ namespace EasyApply.Factories
                         if (!string.IsNullOrEmpty(browser?.WindowHeight))
                             chromeOptions.AddArgument($"--height={browser?.WindowHeight}");
 
-                        foreach (var process in Process.GetProcessesByName("chrome"))
-                        {
-                            process.Kill();
-                        }
+                        //chromeOptions.DebuggerAddress = "127.0.0.1:9222";
 
-                        return new ChromeDriver(chromeOptions);
+                        Console.WriteLine(string.Join(", ", chromeOptions.Arguments));
+                        //foreach (var process in Process.GetProcessesByName("chrome"))
+                        //{
+                        //    process.Kill();
+                        //}
+
+                        return new ChromeDriver("C:\\Users\\leony\\Downloads\\chromedriver-win64\\chromedriver-win64", chromeOptions);
                     }
                 case BrowserType.Firefox:
                     {

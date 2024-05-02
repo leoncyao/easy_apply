@@ -8,10 +8,14 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="easyapply - Copy.yml" />
     <None Remove="easyapply.yml" />
   </ItemGroup>
 
   <ItemGroup>
+    <Content Include="easyapply - Copy.yml">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
     <Content Include="easyapply.yml">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>

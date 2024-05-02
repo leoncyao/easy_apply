@@ -54,6 +54,7 @@ namespace EasyApply.Utilities
         {
             foreach (var path in Constants.ChromeBrowserPaths)
             {
+                Console.WriteLine(path);
                 if (File.Exists(path)) return true;
                 continue;
             }

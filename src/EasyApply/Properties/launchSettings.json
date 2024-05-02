@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "EasyApply": {
+      "commandName": "Project",
+      "commandLineArgs": "-v -p C:\\Users\\leony\\Desktop\\easy_apply\\src\\EasyApply\\easyapply.yml"
+    }
+  }
+}

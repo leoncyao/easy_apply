@@ -1,9 +1,9 @@
 ﻿Browser:
-    BrowserType: Chrome
+    BrowserType: Firefox
     BrowserProfile: Selenium
-    Headless: false
-    # Headless: true
+    Headless: true
     Incognito: false
+    Agent: "Mozilla/5.0 (Windows NT 6.1; Win64; x64; rv:47.0) Gecko/20100101 Firefox/47.0"
     WindowHeight: 1024
     WindowWidth: 1024
     Proxy:
@@ -14,9 +14,9 @@
 OpportunityConfiguration:
     JobType: Indeed # or Monster
     Database: Sqlite
-    Username: suntzurocks@yahoo.com
-    Password: zceui4Z#*g$VChW
-    Position: Software Developer
+    Username:
+    Password:
+    Position:
     Location: Remote
     Resume: c:\resume.pdf
     CoverLetter: c:\cl.pdf

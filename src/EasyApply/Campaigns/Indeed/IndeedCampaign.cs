@@ -34,6 +34,7 @@ using OpenQA.Selenium;
 using OpenQA.Selenium.Support.UI;
 using System.Diagnostics;
 using System.Web;
+using System.Threading;
 
 namespace EasyApply.Campaigns.Indeed
 {
@@ -47,7 +48,7 @@ namespace EasyApply.Campaigns.Indeed
         /// </summary>
         public override async Task StartCampaign()
         {
-            this.GetLogin();
+            //this.GetLogin();
             this.GetSearchPage(null);
             await this.StartJobSearch();
         }
@@ -58,7 +59,7 @@ namespace EasyApply.Campaigns.Indeed
         public override void GetLogin()
         {
             // browser profile should have indeed cookies for bypass
-            if (!string.IsNullOrEmpty(Configuration.Browser.BrowserProfile)) return;
+            //if (!string.IsNullOrEmpty(Configuration.Browser.BrowserProfile)) return;
 
             // login to indeed
             WebDriver.Url = Constants.IndeedLoginUrl;
@@ -66,9 +67,16 @@ namespace EasyApply.Campaigns.Indeed
             var login = WebDriver.FindElement(By.Id(Constants.IndeedLoginCssID));
             login.SendKeys(Configuration.OpportunityConfiguration.Username);
 
+            Thread.Sleep(1000);
+            login.SendKeys(Keys.Return);
+            Console.WriteLine("Hit any key after login & captcha");
+            Console.ReadKey();
+            Thread.Sleep(1000);
             var pass = WebDriver.FindElement(By.Id(Constants.IndeedPasswordCssID));
             pass.SendKeys(Configuration.OpportunityConfiguration.Password);
-
+            Thread.Sleep(1000);
+            pass.SendKeys(Keys.Return);
+            Thread.Sleep(1000);
             // note : need user interaction to bypass captcha
             Console.WriteLine("Hit any key after login & captcha");
             Console.ReadKey();
@@ -94,7 +102,30 @@ namespace EasyApply.Campaigns.Indeed
         public override async Task StartJobSearch()
         {
             OpportunityCounter counter = new();
-            while (true)
+            int num_pages_to_search = 2;
+            // Get the current window handle
+            string currentHandle = WebDriver.CurrentWindowHandle;
+
+            // Get all window handles
+            List<string> allHandles = WebDriver.WindowHandles.ToList();
+
+            // Iterate through all window handles
+            foreach (string handle in allHandles)
+            {
+                // Switch to the window
+                WebDriver.SwitchTo().Window(handle);
+
+                // Close the window if it's not the current window
+                if (handle != currentHandle)
+                {
+                    WebDriver.Close();
+                }
+            }
+
+            // Switch back to the original window
+            WebDriver.SwitchTo().Window(currentHandle);
+
+            while (counter.Pagination < num_pages_to_search)
             {
                 // load page source
                 var doc = new HtmlDocument();
@@ -108,11 +139,14 @@ namespace EasyApply.Campaigns.Indeed
                 }
 
                 // get job containers from search page
+
+                // Waits for 1 second
+                //Thread.Sleep(1000);
                 var jobContainers = this.GetOpportunityContainers(doc);
                 foreach (var container in jobContainers)
                 {
                     // check for opportunity in database
-                    if (!await DataRepository.CheckIndeedOpportunity(this.ParseOpportunityLink(container)))
+                    if (!await DataRepository.CheckIndeedOpportunity(this.ParseOpportunityLink(container.SelectSingleNode(Constants.IndeedContainerLinkClass))))
                     {
                         counter.Opportunities++;
                         IndeedOpportunity opportunity = null;
@@ -148,9 +182,30 @@ namespace EasyApply.Campaigns.Indeed
                         }
                     }
                 }
+                //var doc = new HtmlDocument();
+                //HtmlNodeCollection allNodes = doc.DocumentNode.SelectNodes("//*");
+                //doc.LoadHtml(WebDriver.PageSource);
+                //foreach (HtmlNode node in allNodes)
+                //{
+                //    if (node.NodeType == HtmlNodeType.Element)
+                //    {
+                //        var classAttribute = node.Attributes["class"];
+                //        if (classAttribute != null)
+                //        {
+                //            Console.WriteLine("Element Tag: " + node.Name);
+                //            Console.WriteLine("CSS Classes: " + classAttribute.Value);
+                //            //Console.WriteLine("Node HTML: " + node.OuterHtml);
+                //            Console.WriteLine(); // Add a blank line for clarity
+                //        }
+                //    }
+                //}
+                //string htmlCode = WebDriver.PageSource;
 
+                //// Print the HTML code to the console
+                //Console.WriteLine(htmlCode);
                 // move to next page
                 counter.Pagination++;
+                Thread.Sleep(2000);
                 ((IJavaScriptExecutor)WebDriver).ExecuteScript("window.scrollTo(0, document.body.scrollHeight - 150)");
                 WebDriver.FindElement(By.XPath(Constants.IndeedNextSearchLink)).Click();
                 Console.WriteLine($"[*] Pages Scraped :{counter.Pagination} \n[*] Opportunities Parsed : {counter.Opportunities}");
@@ -190,6 +245,23 @@ namespace EasyApply.Campaigns.Indeed
         /// <returns></returns>
         private HtmlNodeCollection GetOpportunityContainers(HtmlDocument document)
         {
+            //Console.WriteLine(document.DocumentNode);
+            //HtmlNodeCollection allNodes = document.DocumentNode.SelectNodes("//*");
+            ////Console.WriteLine(allNodes.Count);
+            //foreach (HtmlNode node in allNodes)
+            //{
+            //    if (node.NodeType == HtmlNodeType.Element)
+            //    {
+            //        var classAttribute = node.Attributes["class"];
+            //        if (classAttribute != null)
+            //        {
+            //            Console.WriteLine("Element Tag: " + node.Name);
+            //            Console.WriteLine("CSS Classes: " + classAttribute.Value);
+            //            //Console.WriteLine("Node HTML: " + node.OuterHtml);
+            //            Console.WriteLine(); // Add a blank line for clarity
+            //        }
+            //    }
+            //}
             return document.DocumentNode.SelectNodes(Constants.IndeedContainerCssClass);
         }
 
@@ -201,6 +273,8 @@ namespace EasyApply.Campaigns.Indeed
         /// <returns></returns>
         private async Task<IndeedOpportunity> ParseOpportunityContainer(HtmlNode node)
         {
+
+            //cons
             var opportunity = new IndeedOpportunity();
             opportunity.Created = DateTime.Now;
             opportunity.Position = node.SelectSingleNode(Constants.IndeedXpathJobTitle)?.InnerText;
@@ -212,62 +286,62 @@ namespace EasyApply.Campaigns.Indeed
             // black & white lists
             bool isBlackWhiteListed = false;
 
-            if (Configuration.OpportunityConfiguration.CompanyBlacklist != null &&
-                Configuration.OpportunityConfiguration.CompanyBlacklist.Any())
-            {
-                foreach (var keyword in Configuration.OpportunityConfiguration.CompanyBlacklist)
-                {
-                    if (opportunity.Company.Contains(keyword))
-                        isBlackWhiteListed = true;
-                }
-            }
+            //if (Configuration.OpportunityConfiguration.CompanyBlacklist != null &&
+            //    Configuration.OpportunityConfiguration.CompanyBlacklist.Any())
+            //{
+            //    foreach (var keyword in Configuration.OpportunityConfiguration.CompanyBlacklist)
+            //    {
+            //        if (opportunity.Company.Contains(keyword))
+            //            isBlackWhiteListed = true;
+            //    }
+            //}
 
-            if (Configuration.OpportunityConfiguration.Blacklist != null &&
-                Configuration.OpportunityConfiguration.Blacklist.Any())
-            {
-                foreach (var keyword in Configuration.OpportunityConfiguration.Blacklist)
-                {
-                    if (opportunity.Position.Contains(keyword))
-                        isBlackWhiteListed = true;
+            //if (Configuration.OpportunityConfiguration.Blacklist != null &&
+            //    Configuration.OpportunityConfiguration.Blacklist.Any())
+            //{
+            //    foreach (var keyword in Configuration.OpportunityConfiguration.Blacklist)
+            //    {
+            //        if (opportunity.Position.Contains(keyword))
+            //            isBlackWhiteListed = true;
 
-                    if (Configuration.OpportunityConfiguration.ListType == Enums.ListType.OpportunityTitleAndDescription)
-                    {
-                        if (!string.IsNullOrEmpty(opportunity.Description))
-                        {
-                            if (opportunity.Description.Contains(keyword))
-                                isBlackWhiteListed = true;
-                        }
-                    }
-                }
-            }
+            //        if (Configuration.OpportunityConfiguration.ListType == Enums.ListType.OpportunityTitleAndDescription)
+            //        {
+            //            if (!string.IsNullOrEmpty(opportunity.Description))
+            //            {
+            //                if (opportunity.Description.Contains(keyword))
+            //                    isBlackWhiteListed = true;
+            //            }
+            //        }
+            //    }
+            //}
 
-            if (Configuration.OpportunityConfiguration.Whitelist != null &&
-                Configuration.OpportunityConfiguration.Whitelist.Any())
-            {
-                foreach (var keyword in Configuration.OpportunityConfiguration.Whitelist)
-                {
-                    if (opportunity.Position.Contains(keyword))
-                        isBlackWhiteListed = true;
+            //if (Configuration.OpportunityConfiguration.Whitelist != null &&
+            //    Configuration.OpportunityConfiguration.Whitelist.Any())
+            //{
+            //    foreach (var keyword in Configuration.OpportunityConfiguration.Whitelist)
+            //    {
+            //        if (opportunity.Position.Contains(keyword))
+            //            isBlackWhiteListed = true;
 
-                    if (Configuration.OpportunityConfiguration.ListType == Enums.ListType.OpportunityTitleAndDescription)
-                    {
-                        if (!string.IsNullOrEmpty(opportunity.Description))
-                        {
-                            if (opportunity.Description.Contains(keyword))
-                                isBlackWhiteListed = true;
-                        }
-                    }
-                }
-            }
+            //        if (Configuration.OpportunityConfiguration.ListType == Enums.ListType.OpportunityTitleAndDescription)
+            //        {
+            //            if (!string.IsNullOrEmpty(opportunity.Description))
+            //            {
+            //                if (opportunity.Description.Contains(keyword))
+            //                    isBlackWhiteListed = true;
+            //            }
+            //        }
+            //    }
+            //}
 
-            if (isBlackWhiteListed)
-            {
-                opportunity.Id = -1;
-                return opportunity;
-            }
+            //if (isBlackWhiteListed)
+            //{
+            //    opportunity.Id = -1;
+            //    return opportunity;
+            //}
 
             // create link from jk/tk job data
-            opportunity.Link = this.ParseOpportunityLink(node);
+            opportunity.Link = this.ParseOpportunityLink(node.SelectSingleNode(Constants.IndeedContainerLinkClass));
             opportunity.Applied = (node.SelectSingleNode(Constants.IndeedXpathAppliedAlready) != null) ? true : false;
             opportunity.EasyApply = this.ParseEasyResumeTags(node);
 
@@ -284,17 +358,19 @@ namespace EasyApply.Campaigns.Indeed
         /// Submit an easily apply opportunity
         /// </summary>
         /// <param name="opportunity"></param>
-        /// <returns></returns>
+        /// <returns></returns> 
         private async Task<IndeedOpportunity> SubmitEasyApply(IndeedOpportunity opportunity)
         {
             try
             {
                 // open new window and switch to handle
                 ((IJavaScriptExecutor)WebDriver).ExecuteScript($"window.open('{opportunity.Link}', 'NewTab')");
-                WebDriver.SwitchTo().Window(WebDriver.WindowHandles[1]);
+                var wait = new WebDriverWait(WebDriver, TimeSpan.FromSeconds(2));
+                wait.Until(x => WebDriver.SwitchTo().Window(WebDriver.WindowHandles[1]));
 
                 // click to apply
-                var wait = new WebDriverWait(WebDriver, TimeSpan.FromSeconds(10));
+                wait = new WebDriverWait(WebDriver, TimeSpan.FromSeconds(10));
+                Thread.Sleep(10000);
                 wait.Until(x => x.FindElement(By.XPath(Constants.IndeedXpathApplyButton))).Click();
 
                 try
@@ -304,7 +380,7 @@ namespace EasyApply.Campaigns.Indeed
                     Debug.WriteLine($"Indeed applied already bug");
                     return opportunity;
                 }
-                catch (NoSuchElementException) { }
+                catch (OpenQA.Selenium.NoSuchElementException) { }
 
                 try
                 {
@@ -376,8 +452,9 @@ namespace EasyApply.Campaigns.Indeed
         private bool AutoApplyStepCheck()
         {
             // check page header for application step
+            Console.WriteLine(WebDriver.PageSource);
             var heading = WebDriver.FindElement(By.XPath(Constants.IndeedXpathHeader)).Text;
-            if (heading.Contains(Constants.IndeedResumeHeader)) ApplyResumeStep();
+             if (heading.Contains(Constants.IndeedResumeHeader)) ApplyResumeStep();
             else if (heading.Contains(Constants.IndeedQuestionsHeader)) ApplyQuestionsStep();
             else if (heading.Contains(Constants.IndeedPastExperienceHeader)) ApplyPastJobExperienceStep();
             else if (heading.Contains(Constants.IndeedQualificationsHeader)) ApplyBypassRequiredQualifications();
@@ -386,7 +463,8 @@ namespace EasyApply.Campaigns.Indeed
                 if (!Configuration.IndeedConfiguration.BypassRequirements) return false;
                 ApplyAddCoverLetterStep();
             }
-            else if (heading.Contains(Constants.IndeedReviewHeader))
+            else if (heading.Contains(Constants.IndeedLocationHeader)) ApplyReviewStep();
+            else if (heading.Contains(Constants.IndeedReviewApplicationHeader))
             {
                 ApplyReviewStep();
                 return false;
@@ -400,12 +478,14 @@ namespace EasyApply.Campaigns.Indeed
         /// </summary>
         private void ApplyResumeStep()
         {
+            Thread.Sleep(5000);
             // picks uploaded pdf resume on indeed
             var wait = new WebDriverWait(WebDriver, TimeSpan.FromSeconds(5));
             wait.Until(x => x.FindElement(By.XPath(Constants.IndeedXpathPdfResume))).Click();
 
             ((IJavaScriptExecutor)WebDriver).ExecuteScript("window.scrollTo(0, document.body.scrollHeight - 150)");
             var wait1 = new WebDriverWait(WebDriver, TimeSpan.FromSeconds(5));
+            Thread.Sleep(5000);
             wait1.Until(x => x.FindElement(By.XPath(Constants.IndeedXpathContinueButton))).Click();
         }
 
@@ -441,12 +521,12 @@ namespace EasyApply.Campaigns.Indeed
                 var answer = Configuration.OpportunityQuestions
                     .FirstOrDefault(x => question.InnerText.IndexOf(x.Substring, 0, StringComparison.CurrentCultureIgnoreCase) != -1);
 
-                if (answer == null)
-                {
-                    Console.WriteLine($"[*] No answer : {question.InnerText}");
-                    missedQuestions++;
-                    continue;
-                }
+                //if (answer == null)
+                //{
+                //    Console.WriteLine($"[*] No answer : {question.InnerText}");
+                //    missedQuestions++;
+                //    continue;
+                //}
 
                 // check for radio buttons
                 var radioInput = element.SelectSingleNode(Constants.IndeedXpathRadioFieldset);
@@ -580,6 +660,7 @@ namespace EasyApply.Campaigns.Indeed
         {
             ((IJavaScriptExecutor)WebDriver).ExecuteScript("window.scrollTo(0, document.body.scrollHeight - 150)");
             var wait = new WebDriverWait(WebDriver, TimeSpan.FromSeconds(5));
+            Thread.Sleep(1000);
             wait.Until(x => x.FindElement(By.XPath(Constants.IndeedXpathContinueButton))).Click();
         }
     }
