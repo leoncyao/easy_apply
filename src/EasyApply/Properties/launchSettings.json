@@ -1,8 +1,8 @@
 {
   "profiles": {
     "EasyApply": {
-      "commandName": "Project",
-      "commandLineArgs": "-v -p C:\\Users\\leony\\Desktop\\easy_apply\\src\\EasyApply\\easyapply.yml"
+        "commandName": "Project",
+        "commandLineArgs": "-v -p C:\\Users\\ethan\\OneDrive\\Documents\\6th_Year_Self_Learning\\easy_apply_indeed\\src\\EasyApply\\easyapply.yml"
     }
   }
 }

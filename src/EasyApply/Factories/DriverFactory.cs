@@ -71,7 +71,7 @@ namespace EasyApply.Factories
                         }
 
                         var chromeOptions = new ChromeOptions();
-                        string userProfilePath = @"C:\\Users\\leony\\AppData\\Local\\Google\\Chrome\\User Data\\";
+                        string userProfilePath = @"C:\\Users\\Ethan\\AppData\\Local\\Google\\Chrome\\User Data\\";
 
                         chromeOptions.AddArgument($"--user-data-dir={userProfilePath}");
 
@@ -95,7 +95,7 @@ namespace EasyApply.Factories
                         //    process.Kill();
                         //}
 
-                        return new ChromeDriver("C:\\Users\\leony\\Downloads\\chromedriver-win64\\chromedriver-win64", chromeOptions);
+                        return new ChromeDriver("C:\\Users\\Ethan\\OneDrive\\Desktop", chromeOptions);
                     }
                 case BrowserType.Firefox:
                     {

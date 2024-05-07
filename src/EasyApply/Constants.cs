@@ -153,7 +153,9 @@ namespace EasyApply
 
         public static readonly string IndeedXpathQuestions = "//div[contains(@class, 'ia-Questions-item')]";
 
-        public static readonly string IndeedXpathInputId = ".//label";
+        //public static readonly string IndeedXpathInputId = ".//label";
+        public static readonly string IndeedXpathInputId = ".//input";
+
 
         public static readonly string IndeedXpathLabelQuestionValue = ".//div/label/span";
 

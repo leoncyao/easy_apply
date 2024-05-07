@@ -35,6 +35,7 @@ using OpenQA.Selenium.Support.UI;
 using System.Diagnostics;
 using System.Web;
 using System.Threading;
+using System;
 
 namespace EasyApply.Campaigns.Indeed
 {
@@ -469,13 +470,38 @@ namespace EasyApply.Campaigns.Indeed
                 var inputIdElement = element.SelectSingleNode(Constants.IndeedXpathInputId);
                 if (inputIdElement == null) continue;
 
-                var inputId_raw = inputIdElement.GetAttributeValue("for", string.Empty);
+                var inputId_raw = inputIdElement.GetAttributeValue("id", string.Empty);
+                
+               
+                int stringLen = inputId_raw.Length;
+                int secondLastIndex = stringLen - 2;
 
-                int lastIndex = inputId_raw.LastIndexOf('-');
+                var inputId = inputId_raw;
+
+                //if (inputId_raw.LastIndexOf('-') == secondLastIndex)
+                //{
+                //    inputId = inputId_raw.Substring(0, secondLastIndex);
+                //}
+                
+
+        
+
 
                 // Check if '-' exists in the string
 
-                var inputId = inputId_raw.Substring(0, lastIndex);
+                //the form of the translated input ID goes from input-q_LETTERS
+                //eg. input=q_cfcd208495d565ef66e7dff9f98764da
+
+                //the raw transcription of the radio button id is input-q_LETTERS_NUMBER.
+                //eg. input-q_cfcd208495d565ef66e7dff9f98764da-1
+                //_NUMBER has to be stripped out.
+
+                //the raw transcription of the text button id is simply input-q_LETTERS
+                //eg. input-q_c4ca4238a0b923820dcc509a6f75849b
+                //This does not require translation.
+
+
+    
                 //if (lastIndex != -1)
                 //{
                 //    // Truncate the string from the last '-'
@@ -505,11 +531,15 @@ namespace EasyApply.Campaigns.Indeed
 
                 // check for radio buttons
                 var radioInput = element.SelectSingleNode(Constants.IndeedXpathRadioFieldset);
+  
+
                 if (radioInput != null)
                 {
-                    Console.WriteLine($"test {inputId}-0");
+                    Console.WriteLine($"test {inputId}");
 
-                    var radioButton = WebDriver.FindElement(By.Id($"{inputId}-0"));
+                    // finds the button we want to hit
+                    var radioButton = WebDriver.FindElement(By.Id($"{inputId}"));
+                    // hits the button
                     ((IJavaScriptExecutor)WebDriver).ExecuteScript("arguments[0].click();", radioButton);
                     //var labelInputs = radioInput.SelectNodes(Constants.IndeedXpathLabelInputs);
                     //// loop over radio options for value to match answer
@@ -541,34 +571,57 @@ namespace EasyApply.Campaigns.Indeed
                     //    WebDriver.FindElement(By.Id($"input-{inputId}-0")).Click();
                     //}
                 }
+       
                 else
                 {
-                    // find select or input
+
+                   
                     var input = WebDriver.FindElement(By.Id(inputId));
                     var type = input.GetAttribute("type");
-                    if (answer != null)
-                    {
-                        if (!type.Contains("select"))
-                        {
-                            input.Clear();
-                        }
-                        input.SendKeys("1");
-                        //input.SendKeys(answer.Answer);
 
-                        if (!type.Contains("select"))
-                        {
-                            input.SendKeys(Keys.Enter);
-                        }
+                    if (type.Contains("checkbox")){
+                        // finds the button we want to hit
+
+                        //input needs to be translated properly
+                        //input takes the form input-qNUMBERS-c-NUMBER2
+                        //var indexOfSecondDash = inputId_raw.LastIndexOf('-', inputId_raw.LastIndexOf('-') - 1);
+                        //inputId = inputId_raw.Substring(0, indexOfSecondDash);
+                        //var checkboxButton = WebDriver.FindElement(By.Id($"{inputId}"));
+                        // hits the button
+
+                        //var secondLastIndex = url.lastIndexOf('/', url.lastIndexOf('/') - 1)
+                        var checkboxButton = WebDriver.FindElement(By.Id($"{inputId}"));
+                        ((IJavaScriptExecutor)WebDriver).ExecuteScript("arguments[0].click();", checkboxButton);
                     }
+                    // find select or input
                     else
                     {
-                        if (!element.OuterHtml.Contains("optional"))
+                        //temporarily we're having this code block always activate
+                        if (true || answer != null)
                         {
+
                             if (!type.Contains("select"))
                             {
                                 input.Clear();
                             }
-                            missedQuestions++;
+                            input.SendKeys("1");
+                            //input.SendKeys(answer.Answer);
+
+                            if (!type.Contains("select"))
+                            {
+                                input.SendKeys(Keys.Enter);
+                            }
+                        }
+                        else
+                        {
+                            if (!element.OuterHtml.Contains("optional"))
+                            {
+                                if (!type.Contains("select"))
+                                {
+                                    input.Clear();
+                                }
+                                missedQuestions++;
+                            }
                         }
                     }
                 }
