@@ -147,6 +147,7 @@ namespace EasyApply.Campaigns.Indeed
                 {
                     // check for opportunity in database
                     if (!await DataRepository.CheckIndeedOpportunity(this.ParseOpportunityLink(container.SelectSingleNode(Constants.IndeedContainerLinkClass))))
+                    //if (!await DataRepository.CheckIndeedOpportunity(this.ParseOpportunityLink(container)))
                     {
                         counter.Opportunities++;
                         IndeedOpportunity opportunity = null;
@@ -232,6 +233,9 @@ namespace EasyApply.Campaigns.Indeed
         /// <returns></returns>
         private string ParseOpportunityLink(HtmlNode node)
         {
+            Console.WriteLine(node.InnerHtml);
+            Console.WriteLine(node.Attributes["data-jk"].Value);
+            Console.WriteLine(node.Attributes["data-mobtk"].Value);
             // parse/create opportunity link
             return String.Format("https://www.indeed.com/viewjob?jk={0}&tk={1}",
                 node.Attributes["data-jk"].Value,
@@ -285,62 +289,10 @@ namespace EasyApply.Campaigns.Indeed
 
             // black & white lists
             bool isBlackWhiteListed = false;
+            //opportunity.Link = this.ParseOpportunityLink(node);
 
-            //if (Configuration.OpportunityConfiguration.CompanyBlacklist != null &&
-            //    Configuration.OpportunityConfiguration.CompanyBlacklist.Any())
-            //{
-            //    foreach (var keyword in Configuration.OpportunityConfiguration.CompanyBlacklist)
-            //    {
-            //        if (opportunity.Company.Contains(keyword))
-            //            isBlackWhiteListed = true;
-            //    }
-            //}
-
-            //if (Configuration.OpportunityConfiguration.Blacklist != null &&
-            //    Configuration.OpportunityConfiguration.Blacklist.Any())
-            //{
-            //    foreach (var keyword in Configuration.OpportunityConfiguration.Blacklist)
-            //    {
-            //        if (opportunity.Position.Contains(keyword))
-            //            isBlackWhiteListed = true;
-
-            //        if (Configuration.OpportunityConfiguration.ListType == Enums.ListType.OpportunityTitleAndDescription)
-            //        {
-            //            if (!string.IsNullOrEmpty(opportunity.Description))
-            //            {
-            //                if (opportunity.Description.Contains(keyword))
-            //                    isBlackWhiteListed = true;
-            //            }
-            //        }
-            //    }
-            //}
-
-            //if (Configuration.OpportunityConfiguration.Whitelist != null &&
-            //    Configuration.OpportunityConfiguration.Whitelist.Any())
-            //{
-            //    foreach (var keyword in Configuration.OpportunityConfiguration.Whitelist)
-            //    {
-            //        if (opportunity.Position.Contains(keyword))
-            //            isBlackWhiteListed = true;
-
-            //        if (Configuration.OpportunityConfiguration.ListType == Enums.ListType.OpportunityTitleAndDescription)
-            //        {
-            //            if (!string.IsNullOrEmpty(opportunity.Description))
-            //            {
-            //                if (opportunity.Description.Contains(keyword))
-            //                    isBlackWhiteListed = true;
-            //            }
-            //        }
-            //    }
-            //}
-
-            //if (isBlackWhiteListed)
-            //{
-            //    opportunity.Id = -1;
-            //    return opportunity;
-            //}
-
-            // create link from jk/tk job data
+            Console.WriteLine(node.InnerHtml);
+            Console.WriteLine(node.SelectSingleNode(Constants.IndeedContainerLinkClass).InnerHtml);
             opportunity.Link = this.ParseOpportunityLink(node.SelectSingleNode(Constants.IndeedContainerLinkClass));
             opportunity.Applied = (node.SelectSingleNode(Constants.IndeedXpathAppliedAlready) != null) ? true : false;
             opportunity.EasyApply = this.ParseEasyResumeTags(node);
@@ -370,7 +322,7 @@ namespace EasyApply.Campaigns.Indeed
 
                 // click to apply
                 wait = new WebDriverWait(WebDriver, TimeSpan.FromSeconds(10));
-                Thread.Sleep(10000);
+                Thread.Sleep(5000);
                 wait.Until(x => x.FindElement(By.XPath(Constants.IndeedXpathApplyButton))).Click();
 
                 try
@@ -451,9 +403,13 @@ namespace EasyApply.Campaigns.Indeed
         /// <returns></returns>
         private bool AutoApplyStepCheck()
         {
+            Thread.Sleep(1000);
             // check page header for application step
-            Console.WriteLine(WebDriver.PageSource);
-            var heading = WebDriver.FindElement(By.XPath(Constants.IndeedXpathHeader)).Text;
+            //Console.WriteLine(WebDriver.PageSource);
+            Console.WriteLine(Constants.IndeedXpathHeader);
+            var path = "/html/body/div[2]/div/div[1]/div/div/div[2]/div[2]/div/div/main/h1";
+            var heading = WebDriver.FindElement(By.XPath(path)).Text;
+            //var heading = WebDriver.FindElement(By.XPath(Constants.IndeedXpathHeader)).Text;
              if (heading.Contains(Constants.IndeedResumeHeader)) ApplyResumeStep();
             else if (heading.Contains(Constants.IndeedQuestionsHeader)) ApplyQuestionsStep();
             else if (heading.Contains(Constants.IndeedPastExperienceHeader)) ApplyPastJobExperienceStep();
@@ -463,7 +419,7 @@ namespace EasyApply.Campaigns.Indeed
                 if (!Configuration.IndeedConfiguration.BypassRequirements) return false;
                 ApplyAddCoverLetterStep();
             }
-            else if (heading.Contains(Constants.IndeedLocationHeader)) ApplyReviewStep();
+            else if (heading.Contains(Constants.IndeedLocationHeader)) ApplyLocationStep();
             else if (heading.Contains(Constants.IndeedReviewApplicationHeader))
             {
                 ApplyReviewStep();
@@ -487,6 +443,7 @@ namespace EasyApply.Campaigns.Indeed
             var wait1 = new WebDriverWait(WebDriver, TimeSpan.FromSeconds(5));
             Thread.Sleep(5000);
             wait1.Until(x => x.FindElement(By.XPath(Constants.IndeedXpathContinueButton))).Click();
+            Thread.Sleep(5000);
         }
 
         /// <summary>
@@ -503,7 +460,8 @@ namespace EasyApply.Campaigns.Indeed
 
             // get questions from container
             var questions = doc.DocumentNode.SelectNodes(Constants.IndeedXpathQuestions);
-
+            Console.WriteLine(Constants.IndeedXpathQuestions);
+            Console.WriteLine(Constants.IndeedXpathInputId);
             // loop over questions to answer
             foreach (var element in questions)
             {
@@ -511,16 +469,33 @@ namespace EasyApply.Campaigns.Indeed
                 var inputIdElement = element.SelectSingleNode(Constants.IndeedXpathInputId);
                 if (inputIdElement == null) continue;
 
-                var inputId = inputIdElement.GetAttributeValue("for", string.Empty);
+                var inputId_raw = inputIdElement.GetAttributeValue("for", string.Empty);
+
+                int lastIndex = inputId_raw.LastIndexOf('-');
+
+                // Check if '-' exists in the string
+
+                var inputId = inputId_raw.Substring(0, lastIndex);
+                //if (lastIndex != -1)
+                //{
+                //    // Truncate the string from the last '-'
+                //    string truncatedString = inputId.Substring(0, lastIndex);
+                //    Console.WriteLine(truncatedString);
+                //}
+                //else
+                //{
+                //    // '-' not found in the string
+                //    Console.WriteLine("No '-' found in the string.");
+                //}
 
                 // scroll to input id
                 ((IJavaScriptExecutor)WebDriver).ExecuteScript("arguments[0].scrollIntoView(true);", WebDriver.FindElement(By.Id(inputId)));
 
                 var question = element.SelectSingleNode(Constants.IndeedXpathLabelQuestionValue);
 
-                var answer = Configuration.OpportunityQuestions
-                    .FirstOrDefault(x => question.InnerText.IndexOf(x.Substring, 0, StringComparison.CurrentCultureIgnoreCase) != -1);
-
+                //var answer = Configuration.OpportunityQuestions
+                //.FirstOrDefault(x => question.InnerText.IndexOf(x.Substring, 0, StringComparison.CurrentCultureIgnoreCase) != -1);
+                object answer = null;
                 //if (answer == null)
                 //{
                 //    Console.WriteLine($"[*] No answer : {question.InnerText}");
@@ -532,36 +507,39 @@ namespace EasyApply.Campaigns.Indeed
                 var radioInput = element.SelectSingleNode(Constants.IndeedXpathRadioFieldset);
                 if (radioInput != null)
                 {
-                    var labelInputs = radioInput.SelectNodes(Constants.IndeedXpathLabelInputs);
+                    Console.WriteLine($"test {inputId}-0");
 
-                    // loop over radio options for value to match answer
-                    int index = 0;
-                    bool selected = false;
-                    foreach (var label in labelInputs)
-                    {
-                        if (selected) continue;
+                    var radioButton = WebDriver.FindElement(By.Id($"{inputId}-0"));
+                    ((IJavaScriptExecutor)WebDriver).ExecuteScript("arguments[0].click();", radioButton);
+                    //var labelInputs = radioInput.SelectNodes(Constants.IndeedXpathLabelInputs);
+                    //// loop over radio options for value to match answer
+                    //int index = 0;
+                    //bool selected = false;
+                    //foreach (var label in labelInputs)
+                    //{
+                    //    if (selected) continue;
 
-                        // check radio button for answer options
-                        var option = label.SelectSingleNode(Constants.IndeedXpathOptionValue).InnerText;
-                        if (answer != null && option.IndexOf(answer.Answer, 0, StringComparison.CurrentCultureIgnoreCase) != -1)
-                        {
-                            // select radio button if answer matches or yes
-                            var radioButton = WebDriver.FindElement(By.Id($"{inputId}-{index}"));
-                            if (!radioButton.Selected)
-                            {
-                                // radioButton.Click();
-                                ((IJavaScriptExecutor)WebDriver).ExecuteScript("arguments[0].click();", radioButton);
-                            }
-                            selected = true;
-                        }
-                        index++;
-                    }
+                    //    // check radio button for answer options
+                    //    var option = label.SelectSingleNode(Constants.IndeedXpathOptionValue).InnerText;
+                    //    if (answer != null && option.IndexOf(answer.Answer, 0, StringComparison.CurrentCultureIgnoreCase) != -1)
+                    //    {
+                    //        // select radio button if answer matches or yes
+                    //        var radioButton = WebDriver.FindElement(By.Id($"{inputId}-{index}"));
+                    //        if (!radioButton.Selected)
+                    //        {
+                    //            // radioButton.Click();
+                    //            ((IJavaScriptExecutor)WebDriver).ExecuteScript("arguments[0].click();", radioButton);
+                    //        }
+                    //        selected = true;
+                    //    }
+                    //    index++;
+                    //}
 
-                    if (!selected)
-                    {
-                        missedQuestions++;
-                        WebDriver.FindElement(By.Id($"input-{inputId}-0")).Click();
-                    }
+                    //if (!selected)
+                    //{
+                    //    missedQuestions++;
+                    //    WebDriver.FindElement(By.Id($"input-{inputId}-0")).Click();
+                    //}
                 }
                 else
                 {
@@ -574,7 +552,8 @@ namespace EasyApply.Campaigns.Indeed
                         {
                             input.Clear();
                         }
-                        input.SendKeys(answer.Answer);
+                        input.SendKeys("1");
+                        //input.SendKeys(answer.Answer);
 
                         if (!type.Contains("select"))
                         {
@@ -656,12 +635,21 @@ namespace EasyApply.Campaigns.Indeed
         /// <summary>
         /// Review, finalize & submit application
         /// </summary>
-        private void ApplyReviewStep()
+        /// 
+        private void ApplyLocationStep()
         {
             ((IJavaScriptExecutor)WebDriver).ExecuteScript("window.scrollTo(0, document.body.scrollHeight - 150)");
             var wait = new WebDriverWait(WebDriver, TimeSpan.FromSeconds(5));
             Thread.Sleep(1000);
             wait.Until(x => x.FindElement(By.XPath(Constants.IndeedXpathContinueButton))).Click();
+        }
+        private void ApplyReviewStep()
+        {
+            ((IJavaScriptExecutor)WebDriver).ExecuteScript("window.scrollTo(0, document.body.scrollHeight - 150)");
+            var wait = new WebDriverWait(WebDriver, TimeSpan.FromSeconds(5));
+            Thread.Sleep(1000);
+            wait.Until(x => x.FindElement(By.XPath(Constants.IndeedXpathSubmitButton))).Click();
+            Thread.Sleep(1000);
         }
     }
 }

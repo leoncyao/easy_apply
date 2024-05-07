@@ -88,7 +88,7 @@ namespace EasyApply
         /// </summary>
 
         public static readonly string IndeedContainerCssClass = ".//div[contains(@class, 'job_seen_beacon')]";
-        public static readonly string IndeedContainerLinkClass = "//a[contains(@class, 'jcs-JobTitle')]";
+        public static readonly string IndeedContainerLinkClass = ".//a[contains(@class, 'jcs-JobTitle')]";
 
         public static readonly string IndeedXpathAppliedTag = ".//div[@id='applied-snippet']";
 
@@ -120,7 +120,7 @@ namespace EasyApply
 
         public static readonly string IndeedQuestionsHeader = "Answer these questions from the employer";
 
-        public static readonly string IndeedPastExperienceHeader = "past job";
+        public static readonly string IndeedPastExperienceHeader = "Enter a job that shows relevant experience";
 
         public static readonly string IndeedQualificationsHeader = "qualifications";
 
@@ -148,10 +148,12 @@ namespace EasyApply
         //public static readonly string IndeedXpathContinueButton = "//button[contains(@class, 'ia-Profile-Location-continue')]";
         public static readonly string IndeedXpathContinueButton = "//button[span[text()='Continue']]";
 
+        public static readonly string IndeedXpathSubmitButton = "//button[span[text()='Submit your application']]";
+
 
         public static readonly string IndeedXpathQuestions = "//div[contains(@class, 'ia-Questions-item')]";
 
-        public static readonly string IndeedXpathInputId = ".//div/label";
+        public static readonly string IndeedXpathInputId = ".//label";
 
         public static readonly string IndeedXpathLabelQuestionValue = ".//div/label/span";
 
