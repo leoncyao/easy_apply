@@ -16,8 +16,8 @@ OpportunityConfiguration:
     Database: Sqlite
     Username: suntzurocks@yahoo.com
     Password: zceui4Z#*g$VChW
-    Position: Software Developer
-    Location: Remote
+    Position: Junior Software Developer
+    Location: Toronto
     Resume: c:\resume.pdf
     CoverLetter: c:\cl.pdf
     ListType: OpportunityTitleOnly # OpportunityTitleAndDescription

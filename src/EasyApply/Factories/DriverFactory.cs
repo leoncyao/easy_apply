@@ -71,7 +71,7 @@ namespace EasyApply.Factories
                         }
 
                         var chromeOptions = new ChromeOptions();
-                        string userProfilePath = @"C:\\Users\\leony\\AppData\\Local\\Google\\Chrome\\User Data\\";
+                        string userProfilePath = @"C:\\Users\\leony\\AppData\\Local\\Google\\Chrome\\User Data";
 
                         chromeOptions.AddArgument($"--user-data-dir={userProfilePath}");
 

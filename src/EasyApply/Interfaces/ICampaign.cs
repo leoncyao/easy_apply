@@ -51,6 +51,7 @@ namespace EasyApply.Interfaces
             WebDriver = new DriverFactory()
                 .CreateDriver(configuration.Browser);
 
+
             DataRepository = new DataRepositoryFactory()
                 .CreateRepository(configuration.OpportunityConfiguration.Database);
         }

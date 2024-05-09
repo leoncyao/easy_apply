@@ -130,6 +130,8 @@ namespace EasyApply
 
         public static readonly string IndeedReviewApplicationHeader = "Please review your application";
 
+        public static readonly string IndeedVoluntaryIdentificationHeader = "Voluntary self identification questions from the employer";
+
         /// <summary>
         /// Indeed Application Xpaths
         /// </summary>
@@ -150,10 +152,16 @@ namespace EasyApply
 
         public static readonly string IndeedXpathSubmitButton = "//button[span[text()='Submit your application']]";
 
+        public static readonly string IndeedXpathReviewButton = "//button[span[text()='Review your application']]";
+
 
         public static readonly string IndeedXpathQuestions = "//div[contains(@class, 'ia-Questions-item')]";
 
-        public static readonly string IndeedXpathInputId = ".//label";
+        public static readonly string IndeedXpathInputId = ".//input";
+
+        public static readonly string IndeedXpathSelectSelector = ".//select";
+
+        public static readonly string IndeedXpathTextAreaSelector = ".//textarea";
 
         public static readonly string IndeedXpathLabelQuestionValue = ".//div/label/span";
 

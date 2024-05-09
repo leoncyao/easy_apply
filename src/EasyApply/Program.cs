@@ -57,6 +57,9 @@ namespace EasyAppy
         {
             var rootCommand = new RootCommand
             {
+                 new Option<string>(
+                    new string[]{ "--url"},
+                    description: "Url of search page"),
                 new Option<string>(
                     new string[]{ "--path", "-p"},
                     description: "Path to campaign yml file"),
