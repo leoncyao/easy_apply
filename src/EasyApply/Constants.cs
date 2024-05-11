@@ -132,6 +132,7 @@ namespace EasyApply
 
         public static readonly string IndeedVoluntaryIdentificationHeader = "Voluntary self identification questions from the employer";
 
+        public static readonly string IndeedRequestsCoverLetterHeader = "The employer requests a cover letter for this application";
         /// <summary>
         /// Indeed Application Xpaths
         /// </summary>

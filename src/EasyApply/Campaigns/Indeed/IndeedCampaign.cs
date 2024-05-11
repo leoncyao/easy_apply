@@ -96,7 +96,8 @@ namespace EasyApply.Campaigns.Indeed
             System.Diagnostics.Debug.WriteLine(Configuration.OpportunityConfiguration.Position);
             System.Diagnostics.Debug.WriteLine(Configuration.OpportunityConfiguration.Location);
             // encode indeed search url string
-            var uri = "https://ca.indeed.com/jobs?q=junior+software+developer&l=Toronto%2C+ON&from=searchOnHP&vjk=4203b76ebedee612";
+            //var uri = "https://ca.indeed.com/jobs?q=junior+software+developer&l=Toronto%2C+ON&from=searchOnHP&vjk=4203b76ebedee612";
+            var uri = "https://ca.indeed.com/jobs?q=entry+level+software+developer&l=Remote&from=searchOnHP&vjk=1dbe12f243c824bf";
             //var uri = String.Format("{0}/jobs?q={1}&l={2}",
             //    Constants.IndeedUrl,
             //    HttpUtility.UrlEncode(Configuration.OpportunityConfiguration.Position),
@@ -136,7 +137,8 @@ namespace EasyApply.Campaigns.Indeed
                 try
                 {
                     WebDriver.SwitchTo().Window(handle);
-                } catch (Exception ex)
+                }
+                catch (Exception ex)
                 {
                     Debug.WriteLine($"Switched windows too quickly");
                 }
@@ -207,7 +209,7 @@ namespace EasyApply.Campaigns.Indeed
                         {
                             // saved for off-site application
                             counter.Saved++;
-                            Console.WriteLine($"[*][{ counter.Saved,3}] Saved:\t\t{opportunity.Company} - {opportunity.Position}");
+                            Console.WriteLine($"[*][{counter.Saved,3}] Saved:\t\t{opportunity.Company} - {opportunity.Position}");
                         }
                     }
                 }
@@ -216,10 +218,19 @@ namespace EasyApply.Campaigns.Indeed
                 //Console.WriteLine(htmlCode);
                 // move to next page
                 counter.Pagination++;
-                Thread.Sleep(2000);
+                Thread.Sleep(1000);
                 ((IJavaScriptExecutor)WebDriver).ExecuteScript("window.scrollTo(0, document.body.scrollHeight - 150)");
-                WebDriver.FindElement(By.XPath(Constants.IndeedNextSearchLink)).Click();
-                Thread.Sleep(2000);
+
+                try
+                {
+                    WebDriver.FindElement(By.XPath(Constants.IndeedNextSearchLink)).Click();
+                }
+                catch
+                {
+                    Debug.WriteLine("Ran out of jobs to apply for currently with this search");
+                    break;
+                }
+                Thread.Sleep(1000);
                 Console.WriteLine($"[*] Pages Scraped :{counter.Pagination} \n[*] Opportunities Parsed : {counter.Opportunities}");
             }
         }
@@ -333,9 +344,21 @@ namespace EasyApply.Campaigns.Indeed
                 wait.Until(x => WebDriver.SwitchTo().Window(WebDriver.WindowHandles[1]));
 
                 // click to apply
-                wait = new WebDriverWait(WebDriver, TimeSpan.FromSeconds(10));
-                Thread.Sleep(5000);
-                wait.Until(x => x.FindElement(By.XPath(Constants.IndeedXpathApplyButton))).Click();
+                wait = new WebDriverWait(WebDriver, TimeSpan.FromSeconds(2));
+                Thread.Sleep(2000);
+                try
+                {
+                    WebDriver.FindElement(By.XPath(Constants.IndeedXpathApplyButton)).Click();
+                }
+                catch (OpenQA.Selenium.NoSuchElementException)
+                {
+                    //WebDriver.Close();
+                }
+                catch (OpenQA.Selenium.ElementClickInterceptedException)
+                {
+                    Debug.WriteLine("Something was covering the apply button");
+                }
+
 
                 try
                 {
@@ -344,7 +367,8 @@ namespace EasyApply.Campaigns.Indeed
                     Debug.WriteLine($"Indeed applied already bug");
                     return opportunity;
                 }
-                catch (OpenQA.Selenium.NoSuchElementException) {
+                catch (OpenQA.Selenium.NoSuchElementException)
+                {
                     //WebDriver.Close();
                 }
 
@@ -362,6 +386,8 @@ namespace EasyApply.Campaigns.Indeed
                     // auto application apply loop
                     // note: each loop detects application steps
                     bool isParsing = true;
+
+                    // TODO Add counter for max autoapply steps ( say 20 )?
                     while (isParsing)
                     {
                         // check for application view
@@ -417,7 +443,7 @@ namespace EasyApply.Campaigns.Indeed
         /// <returns></returns>
         private bool AutoApplyStepCheck()
         {
-            Thread.Sleep(2000);
+            Thread.Sleep(3000);
             // check page header for application step
             //Console.WriteLine(WebDriver.PageSource);
             //Console.WriteLine(Constants.IndeedXpathHeader);
@@ -435,16 +461,38 @@ namespace EasyApply.Campaigns.Indeed
             }
             else if (heading.Contains(Constants.IndeedLocationHeader)) ApplyLocationStep();
             else if (heading.Contains(Constants.IndeedVoluntaryIdentificationHeader)) ApplyVoluntaryIdentificationStep();
+            else if (heading.Contains(Constants.IndeedRequestsCoverLetterHeader)) ApplyWriteCoverLetterStep();
             else if (heading.Contains(Constants.IndeedReviewApplicationHeader))
             {
                 ApplyReviewStep();
                 Thread.Sleep(1000);
                 return false;
-            } else
+            }
+            else
             {
                 ((IJavaScriptExecutor)WebDriver).ExecuteScript("window.scrollTo(0, document.body.scrollHeight - 150)");
-                var wait = new WebDriverWait(WebDriver, TimeSpan.FromSeconds(5));
-                wait.Until(x => x.FindElement(By.XPath(Constants.IndeedXpathContinueButton))).Click();
+                try
+                {
+                    var review_button = WebDriver.FindElement(By.XPath(Constants.IndeedXpathReviewButton));
+                    review_button.Click();
+                    Thread.Sleep(2000);
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine("no review button");
+                }
+
+                try
+                {
+                    var review_button = WebDriver.FindElement(By.XPath(Constants.IndeedXpathContinueButton));
+                    review_button.Click();
+                    Thread.Sleep(2000);
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine("no continue button");
+
+                }
             }
 
             return true;
@@ -485,107 +533,105 @@ namespace EasyApply.Campaigns.Indeed
             //Console.WriteLine(Constants.IndeedXpathInputId);
             // loop over questions to answer
             int i = 0;
-            foreach (var element in questions)
+            if (questions != null)
             {
-                // get input id, question, and possible answer from yml configuration
-                var inputIdElement = element.SelectSingleNode(Constants.IndeedXpathInputId);
-                var SelectIdElement = element.SelectSingleNode(Constants.IndeedXpathSelectSelector);
-                var TextAreaIdElement = element.SelectSingleNode(Constants.IndeedXpathTextAreaSelector);
-               
-                if (inputIdElement != null)
+                foreach (var element in questions)
                 {
-                    // need to get the id, and then find the element
-                    var inputId = inputIdElement.GetAttributeValue("id", string.Empty);                
-                    if (inputId == "") continue;
-                    var input = WebDriver.FindElement(By.Id(inputId));
-                    
-                    
-                    var type = input.GetAttribute("type");
-                    if (type == "radio" || type == "checkbox")
+                    // get input id, question, and possible answer from yml configuration
+                    var inputIdElement = element.SelectSingleNode(Constants.IndeedXpathInputId);
+                    var SelectIdElement = element.SelectSingleNode(Constants.IndeedXpathSelectSelector);
+                    var TextAreaIdElement = element.SelectSingleNode(Constants.IndeedXpathTextAreaSelector);
+
+                    if (inputIdElement != null)
                     {
-                        ((IJavaScriptExecutor)WebDriver).ExecuteScript("arguments[0].click();", input);
-                    }
-                    else if (type == "text" || type == "number")
-                    {
-                        var placeholder = inputIdElement.GetAttributeValue("placeholder", string.Empty);
-                        var currentValue = inputIdElement.GetAttributeValue("value", string.Empty);
-                        for (int j = 0; j < 10; j++)
+                        // need to get the id, and then find the element
+                        var inputId = inputIdElement.GetAttributeValue("id", string.Empty);
+                        if (inputId == "") continue;
+                        var input = WebDriver.FindElement(By.Id(inputId));
+
+
+                        var type = input.GetAttribute("type");
+                        if (type == "radio" || type == "checkbox")
                         {
-                            input.SendKeys(Keys.Backspace);
+                            ((IJavaScriptExecutor)WebDriver).ExecuteScript("arguments[0].click();", input);
                         }
-                        if (currentValue.Length == 0)
+                        else if (type == "text" || type == "number")
                         {
+                            var placeholder = inputIdElement.GetAttributeValue("placeholder", string.Empty);
+                            var currentValue = inputIdElement.GetAttributeValue("value", string.Empty);
+                            for (int j = 0; j < 10; j++)
+                            {
+                                input.SendKeys(Keys.Backspace);
+                            }
+                            if (currentValue.Length == 0)
+                            {
+                                if (placeholder != "")
+                                {
+                                    input.SendKeys(placeholder);
+                                }
+                                else
+                                {
+                                    input.SendKeys("10");
+                                }
+                            }
+                            else
+                            {
+                                input.SendKeys(currentValue);
+                            }
+                        }
+                        else if (type == "file")
+                        {
+                            input.SendKeys("C:\\Users\\leony\\Desktop\\projects\\easy_apply\\src\\cover_letter.pdf");
+                        }
+                        else if (type == "tel")
+                        {
+                            input.SendKeys("1111111111");
+                        }
+                        else
+                        {
+                            var placeholder = inputIdElement.GetAttributeValue("placeholder", string.Empty);
                             if (placeholder != "")
                             {
                                 input.SendKeys(placeholder);
                             }
-                            else
-                            {
-                                input.SendKeys("10");
-                            }
-                        }
-                        else
-                        {
-                            input.SendKeys(currentValue);
                         }
                     }
-                    else if (type == "file")
-                    {
-                        input.SendKeys("C:\\Users\\leony\\Desktop\\projects\\easy_apply\\src\\cover_letter.pdf");
-                    }
-                    else if (type == "tel")
-                    {
-                        input.SendKeys("1111111111");
-                    }
-                    else
-                    {
-                        var placeholder = inputIdElement.GetAttributeValue("placeholder", string.Empty);
-                        if (placeholder != "")
-                        {
-                            input.SendKeys(placeholder);
-                        }
-                    }
-                }
-                // see if there is a select element
+                    // see if there is a select element
                     //var selectNode = element.SelectSingleNode(Constants.IndeedXpathSelectSelector);
-                if (SelectIdElement != null) 
-                {
-                    var SelectId = SelectIdElement.GetAttributeValue("id", string.Empty);
-                    if (SelectId == "") continue;
-                    var Select = WebDriver.FindElement(By.Id(SelectId));
-                    Select.SendKeys(Keys.Space);
-                    Select.SendKeys(Keys.Down);
-                    Select.SendKeys(Keys.Down);
-                    Select.SendKeys(Keys.Down);
-                    Select.SendKeys(Keys.Enter);
-                }
+                    if (SelectIdElement != null)
+                    {
+                        var SelectId = SelectIdElement.GetAttributeValue("id", string.Empty);
+                        if (SelectId == "") continue;
+                        var Select = WebDriver.FindElement(By.Id(SelectId));
+                        Select.SendKeys(Keys.Space);
+                        // pressing down 3 times seems to go to postdoctorate for the education question quite frequently
+                        Select.SendKeys(Keys.Down);
+                        //Select.SendKeys(Keys.Down);
+                        //Select.SendKeys(Keys.Down);
+                        Select.SendKeys(Keys.Enter);
+                    }
 
-                if (TextAreaIdElement != null)
-                {
-                    var TextAreaId = TextAreaIdElement.GetAttributeValue("id", string.Empty);
-                    if (TextAreaId == "") continue;
-                    var TextArea = WebDriver.FindElement(By.Id(TextAreaId));
-                    TextArea.SendKeys("100000");
-                }
+                    if (TextAreaIdElement != null)
+                    {
+                        var TextAreaId = TextAreaIdElement.GetAttributeValue("id", string.Empty);
+                        if (TextAreaId == "") continue;
+                        var TextArea = WebDriver.FindElement(By.Id(TextAreaId));
+                        TextArea.SendKeys("100000");
+                    }
 
-                //var Selectnode = new SelectElement (Select);
-                //var firstOption = Select.Options[0];
+                    // scroll to input id
+                    //((IJavaScriptExecutor)WebDriver).ExecuteScript("arguments[0].scrollIntoView(true);", WebDriver.FindElement(By.Id(inputId)));
+                    //var question = element.SelectSingleNode(Constants.IndeedXpathLabelQuestionValue);
+                    //var answer = Configuration.OpportunityQuestions
+                    //.FirstOrDefault(x => question.InnerText.IndexOf(x.Substring, 0, StringComparison.CurrentCultureIgnoreCase) != -1);
+                    //object answer = null;
 
-                // Click on the first option
-                //firstOption.Click();
+                    i = i + 1;
 
-                // scroll to input id
-                //((IJavaScriptExecutor)WebDriver).ExecuteScript("arguments[0].scrollIntoView(true);", WebDriver.FindElement(By.Id(inputId)));
-                //var question = element.SelectSingleNode(Constants.IndeedXpathLabelQuestionValue);
-                //var answer = Configuration.OpportunityQuestions
-                //.FirstOrDefault(x => question.InnerText.IndexOf(x.Substring, 0, StringComparison.CurrentCultureIgnoreCase) != -1);
-                //object answer = null;
-
-                i = i + 1;
-
-                if (i == 50)
-                {
-                    throw new Exception("Got stuck on a question for job " + WebDriver.Url);
+                    if (i == 50)
+                    {
+                        throw new Exception("Got stuck on a question for job " + WebDriver.Url);
+                    }
                 }
             }
 
@@ -597,8 +643,8 @@ namespace EasyApply.Campaigns.Indeed
             ((IJavaScriptExecutor)WebDriver).ExecuteScript("window.scrollTo(0, document.body.scrollHeight - 150)");
             try
             {
-                var review_button = WebDriver.FindElement(By.XPath(Constants.IndeedXpathContinueButton));
-                review_button.Click();
+                var continue_button = WebDriver.FindElement(By.XPath(Constants.IndeedXpathContinueButton));
+                continue_button.Click();
                 Thread.Sleep(1000);
                 return;
             }
@@ -615,10 +661,56 @@ namespace EasyApply.Campaigns.Indeed
         private void ApplyPastJobExperienceStep()
         {
             Thread.Sleep(1000);
-            // auto populated
-            var wait = new WebDriverWait(WebDriver, TimeSpan.FromSeconds(5));
-            wait.Until(x => x.FindElement(By.XPath(Constants.IndeedXpathContinueButton))).Click();
-            Thread.Sleep(2000);
+
+            var doc = new HtmlDocument();
+            doc.LoadHtml(WebDriver.PageSource);
+
+            // get questions from container
+            var questions = doc.DocumentNode.SelectNodes(Constants.IndeedXpathInputId);
+            //Console.WriteLine(Constants.IndeedXpathQuestions);
+            //Console.WriteLine(Constants.IndeedXpathInputId);
+            // loop over questions to answer
+            if (questions != null)
+            {
+
+                int i = 0;
+                String[] answers = { "Full Stack Developer", "Encircle" };
+
+                // assuming there are two fields, job title and company
+                foreach (var inputIdElement in questions)
+                {
+                    // get input id, question, and possible answer from yml configuration
+                    //var inputIdElement = element.SelectSingleNode(Constants.IndeedXpathInputId);
+                    var inputId = inputIdElement.GetAttributeValue("id", string.Empty);
+                    if (inputId == "") continue;
+                    var input = WebDriver.FindElement(By.Id(inputId));
+                    for (int j = 0; j < 50; j++)
+                    {
+                        input.SendKeys(Keys.Backspace);
+                    }
+                    input.SendKeys(answers[i]);
+
+                    i = i + 1;
+                }
+            }
+
+            try
+            {
+                var continue_button = WebDriver.FindElement(By.XPath(Constants.IndeedXpathContinueButton));
+                continue_button.Click();
+                Thread.Sleep(1000);
+                return;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("no continue button");
+
+            }
+
+            //// auto populated
+            //var wait = new WebDriverWait(WebDriver, TimeSpan.FromSeconds(5));
+            //wait.Until(x => x.FindElement(By.XPath(Constants.IndeedXpathContinueButton))).Click();
+            //Thread.Sleep(2000);
         }
 
         /// <summary>
@@ -637,26 +729,39 @@ namespace EasyApply.Campaigns.Indeed
         /// </summary>
         private void ApplyAddCoverLetterStep()
         {
+            //try
+            //{
+            //    // add resume located at yml configuration path
+            //    WebDriver.Manage().Timeouts().ImplicitWait = TimeSpan.FromSeconds(2);
+            //    var uploadFile = WebDriver.FindElement(By.Id("additionalDocuments"));
+            //    uploadFile.SendKeys(Configuration.OpportunityConfiguration.CoverLetter);
+
+            //    WebDriver.FindElement(By.XPath(Constants.IneedXpathWriteCoverLetterButton)).Click();
+            //}
+            //catch (NoSuchElementException)
+            //{
+            //    // select auto populated cover letter text
+            //    var wait1 = new WebDriverWait(WebDriver, TimeSpan.FromSeconds(5));
+            //    wait1.Until(x => x.FindElement(By.XPath(Constants.IneedXpathWriteCoverLetterButton))).Click();
+            //}
+
+            //WebDriver.Manage().Timeouts().ImplicitWait = TimeSpan.FromSeconds(15);
+            //((IJavaScriptExecutor)WebDriver).ExecuteScript("window.scrollTo(0, document.body.scrollHeight - 150)");
+            //var wait2 = new WebDriverWait(WebDriver, TimeSpan.FromSeconds(5));
+            Thread.Sleep(1000);
+            ((IJavaScriptExecutor)WebDriver).ExecuteScript("window.scrollTo(0, document.body.scrollHeight - 150)");
             try
             {
-                // add resume located at yml configuration path
-                WebDriver.Manage().Timeouts().ImplicitWait = TimeSpan.FromSeconds(2);
-                var uploadFile = WebDriver.FindElement(By.Id("additionalDocuments"));
-                uploadFile.SendKeys(Configuration.OpportunityConfiguration.CoverLetter);
-
-                WebDriver.FindElement(By.XPath(Constants.IneedXpathWriteCoverLetterButton)).Click();
+                var review_button = WebDriver.FindElement(By.XPath(Constants.IndeedXpathReviewButton));
+                review_button.Click();
+                Thread.Sleep(1000);
+                return;
             }
-            catch (NoSuchElementException)
+            catch (Exception ex)
             {
-                // select auto populated cover letter text
-                var wait1 = new WebDriverWait(WebDriver, TimeSpan.FromSeconds(5));
-                wait1.Until(x => x.FindElement(By.XPath(Constants.IneedXpathWriteCoverLetterButton))).Click();
-            }
+                Console.WriteLine("no continue button");
 
-            WebDriver.Manage().Timeouts().ImplicitWait = TimeSpan.FromSeconds(15);
-            ((IJavaScriptExecutor)WebDriver).ExecuteScript("window.scrollTo(0, document.body.scrollHeight - 150)");
-            var wait2 = new WebDriverWait(WebDriver, TimeSpan.FromSeconds(5));
-            wait2.Until(x => x.FindElement(By.XPath(Constants.IndeedXpathContinueButton))).Click();
+            }
         }
 
         /// <summary>
@@ -672,7 +777,34 @@ namespace EasyApply.Campaigns.Indeed
                 var review_button = WebDriver.FindElement(By.XPath(Constants.IndeedXpathContinueButton));
                 review_button.Click();
                 return;
-            } catch (Exception ex)
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine("no continue button");
+            }
+            Thread.Sleep(1000);
+        }
+
+        private void ApplyWriteCoverLetterStep()
+        {
+            // load page source
+            var doc = new HtmlDocument();
+            doc.LoadHtml(WebDriver.PageSource);
+
+            var TextAreaIdElement = doc.DocumentNode.SelectSingleNode(Constants.IndeedXpathTextAreaSelector);
+            if (TextAreaIdElement != null)
+            {
+                var TextAreaId = TextAreaIdElement.GetAttributeValue("id", string.Empty);
+                var TextArea = WebDriver.FindElement(By.Id(TextAreaId));
+                TextArea.SendKeys("Dear Hiring Manager, I'm enthusiastic about this that I found on Indeed. My experience as a Software Developer at Encircle involved diverse tasks in web and mobile app development and testing, emphasizing both manual and automated testing methods. During an internship at Ecopia, I developed C++ programs for blending satellite images, refining my debugging and problem-solving skills. My undergraduate studies in Mathematics and Computer Science, particularly in Software Design and System Tools, honed my programming abilities. I am eager to discuss how my experiences align with the position's requirements. Thank you for considering my application.");
+            }
+
+            try
+            {
+                var review_button = WebDriver.FindElement(By.XPath(Constants.IndeedXpathReviewButton));
+                review_button.Click();
+            }
+            catch (Exception ex)
             {
                 Debug.WriteLine("no continue button");
             }

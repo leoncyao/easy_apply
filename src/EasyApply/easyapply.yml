@@ -17,9 +17,9 @@ OpportunityConfiguration:
     Username: suntzurocks@yahoo.com
     Password: zceui4Z#*g$VChW
     Position: Junior Software Developer
-    Location: Toronto
-    Resume: c:\resume.pdf
-    CoverLetter: c:\cl.pdf
+    Location: Remote
+    Resume: C:\\Users\\leony\\Desktop\\projects\\easy_apply\\src\\resume.pdf
+    CoverLetter: C:\\Users\\leony\\Desktop\\projects\\easy_apply\\src\\cover_letter.pdf
     ListType: OpportunityTitleOnly # OpportunityTitleAndDescription
     CompanyBlacklist:
     Whitelist:
