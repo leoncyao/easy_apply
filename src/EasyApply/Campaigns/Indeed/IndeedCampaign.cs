@@ -632,8 +632,110 @@ namespace EasyApply.Campaigns.Indeed
                     {
                         throw new Exception("Got stuck on a question for job " + WebDriver.Url);
                     }
+
                 }
+
             }
+
+            Thread.Sleep(1000);
+
+            doc = new HtmlDocument();
+            doc.LoadHtml(WebDriver.PageSource);
+            questions = doc.DocumentNode.SelectNodes(Constants.IndeedXpathQuestions);
+            //Console.WriteLine(Constants.IndeedXpathQuestions);
+            //Console.WriteLine(Constants.IndeedXpathInputId);
+            // loop over questions to answer
+            i = 0;
+            if (questions != null)
+            {
+                foreach (var element in questions)
+                {
+                    // get input id, question, and possible answer from yml configuration
+                    var inputIdElement = element.SelectSingleNode(Constants.IndeedXpathInputId);
+                    var TextAreaIdElement = element.SelectSingleNode(Constants.IndeedXpathTextAreaSelector);
+
+                    if (inputIdElement != null)
+                    {
+                        // need to get the id, and then find the element
+                        var inputId = inputIdElement.GetAttributeValue("id", string.Empty);
+                        if (inputId == "") continue;
+                        var input = WebDriver.FindElement(By.Id(inputId));
+
+
+                        var type = input.GetAttribute("type");
+                        if (type == "text" || type == "number")
+                        {
+                            var placeholder = inputIdElement.GetAttributeValue("placeholder", string.Empty);
+                            var currentValue = inputIdElement.GetAttributeValue("value", string.Empty);
+                            for (int j = 0; j < 10; j++)
+                            {
+                                input.SendKeys(Keys.Backspace);
+                            }
+                            if (currentValue.Length == 0)
+                            {
+                                if (placeholder != "")
+                                {
+                                    input.SendKeys(placeholder);
+                                }
+                                else
+                                {
+                                    input.SendKeys("10");
+                                }
+                            }
+                            else
+                            {
+                                input.SendKeys(currentValue);
+                            }
+                        }
+                        else if (type == "file")
+                        {
+                            input.SendKeys("C:\\Users\\leony\\Desktop\\projects\\easy_apply\\src\\cover_letter.pdf");
+                        }
+                        else if (type == "tel")
+                        {
+                            for (int j = 0; j < 50; j++)
+                            {
+                                input.SendKeys(Keys.Backspace);
+                            }
+                            input.SendKeys("1111111111");
+                        }
+                        else
+                        {
+                            var placeholder = inputIdElement.GetAttributeValue("placeholder", string.Empty);
+                            if (placeholder != "")
+                            {
+                                input.SendKeys(placeholder);
+                            }
+                        }
+                    }
+
+                    if (TextAreaIdElement != null)
+                    {
+                        var TextAreaId = TextAreaIdElement.GetAttributeValue("id", string.Empty);
+                        if (TextAreaId == "") continue;
+                        var TextArea = WebDriver.FindElement(By.Id(TextAreaId));
+                        TextArea.SendKeys("100000");
+                    }
+
+                    // scroll to input id
+                    //((IJavaScriptExecutor)WebDriver).ExecuteScript("arguments[0].scrollIntoView(true);", WebDriver.FindElement(By.Id(inputId)));
+                    //var question = element.SelectSingleNode(Constants.IndeedXpathLabelQuestionValue);
+                    //var answer = Configuration.OpportunityQuestions
+                    //.FirstOrDefault(x => question.InnerText.IndexOf(x.Substring, 0, StringComparison.CurrentCultureIgnoreCase) != -1);
+                    //object answer = null;
+
+                    i = i + 1;
+
+                    if (i == 50)
+                    {
+                        throw new Exception("Got stuck on a question for job " + WebDriver.Url);
+                    }
+
+                }
+
+            }
+
+
 
             if (missedQuestions > 0)
             {
@@ -796,6 +898,10 @@ namespace EasyApply.Campaigns.Indeed
             {
                 var TextAreaId = TextAreaIdElement.GetAttributeValue("id", string.Empty);
                 var TextArea = WebDriver.FindElement(By.Id(TextAreaId));
+                for (int j = 0; j < 2000; j++)
+                {
+                    TextArea.SendKeys(Keys.Backspace);
+                }
                 TextArea.SendKeys("Dear Hiring Manager, I'm enthusiastic about this that I found on Indeed. My experience as a Software Developer at Encircle involved diverse tasks in web and mobile app development and testing, emphasizing both manual and automated testing methods. During an internship at Ecopia, I developed C++ programs for blending satellite images, refining my debugging and problem-solving skills. My undergraduate studies in Mathematics and Computer Science, particularly in Software Design and System Tools, honed my programming abilities. I am eager to discuss how my experiences align with the position's requirements. Thank you for considering my application.");
             }
 
