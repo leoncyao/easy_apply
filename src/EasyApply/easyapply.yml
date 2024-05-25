@@ -10,6 +10,9 @@
         Enabled: "false"
         Host: "127.0.0.0"
         Port: 53
+    # driver_path : "/home/leon/Desktop/automated_projects/EasyApply"
+    driver_path : "C:\\Users\\leony\\Desktop\\projects\\easy_apply"
+    profile_path : "C:\\Users\\leony\\AppData\\Local\\Google\\Chrome\\User Data"
 
 OpportunityConfiguration:
     JobType: Indeed # or Monster

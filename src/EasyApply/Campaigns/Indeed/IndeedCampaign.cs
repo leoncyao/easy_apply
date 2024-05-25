@@ -93,11 +93,12 @@ namespace EasyApply.Campaigns.Indeed
         /// </summary>
         public override void GetSearchPage(int? page)
         {
+            Thread.Sleep(2000);
             System.Diagnostics.Debug.WriteLine(Configuration.OpportunityConfiguration.Position);
             System.Diagnostics.Debug.WriteLine(Configuration.OpportunityConfiguration.Location);
             // encode indeed search url string
-            //var uri = "https://ca.indeed.com/jobs?q=junior+software+developer&l=Toronto%2C+ON&from=searchOnHP&vjk=4203b76ebedee612";
-            var uri = "https://ca.indeed.com/jobs?q=entry+level+software+developer&l=Remote&from=searchOnHP&vjk=1dbe12f243c824bf";
+            var uri = "https://ca.indeed.com/jobs?q=junior+software+developer&l=Toronto%2C+ON&from=searchOnHP&vjk=4203b76ebedee612";
+            //var uri = "https://ca.indeed.com/jobs?q=entry+level+software+developer&l=Remote&from=searchOnHP&vjk=1dbe12f243c824bf";
             //var uri = String.Format("{0}/jobs?q={1}&l={2}",
             //    Constants.IndeedUrl,
             //    HttpUtility.UrlEncode(Configuration.OpportunityConfiguration.Position),

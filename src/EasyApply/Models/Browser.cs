@@ -43,5 +43,7 @@ namespace EasyApply.Models
         public string WindowHeight { get; set; }
         public string WindowWidth { get; set; }
         public Proxy? Proxy { get; set; }
+        public string driver_path { get; set; }
+        public string profile_path { get; set; }
     }
 }
