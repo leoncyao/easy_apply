@@ -2,7 +2,16 @@
   "profiles": {
     "EasyApply": {
       "commandName": "Project",
-      "commandLineArgs": "-v -p C:\\Users\\leony\\Desktop\\projects\\easy_apply\\src\\EasyApply\\easyapply.yml"
+      "commandLineArgs": "-v -p easyapply.yml"
+    },
+    "Profile 1": {
+      "commandName": "Executable"
+    },
+    "Profile 2": {
+      "commandName": "Project",
+      "remoteDebugEnabled": true,
+      "remoteDebugMachine": "99.230.251.252:22",
+      "authenticationMode": "Windows"
     }
   }
 }

@@ -138,7 +138,11 @@ namespace EasyApply.Factories
                         //return new ChromeDriver("C:\\Users\\leony\\Desktop\\projects\\easy_apply", chromeOptions);
                         Console.WriteLine(userProfilePath);
                         Debug.WriteLine(browser.driver_path);
-                        driver = new ChromeDriver(browser.driver_path, chromeOptions);
+                        //driver = new ChromeDriver(browser.driver_path, chromeOptions);
+
+                        string currentDirectory = Directory.GetCurrentDirectory();
+                        driver = new ChromeDriver(currentDirectory, chromeOptions);
+                        //driver = new ChromeDriver("browser.driver_path", chromeOptions);
 
                         //List<Cookie> cookies = LoadCookiesFromFile(browser.driver_path + "/cookies.json");
 

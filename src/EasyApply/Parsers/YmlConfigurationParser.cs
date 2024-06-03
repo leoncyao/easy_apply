@@ -46,11 +46,13 @@ namespace EasyApply.Parsers
         public static YmlConfiguration LoadConfiguration(string path)
         {
             string yml;
+            string currentDirectory = Directory.GetCurrentDirectory();
+            string full_path = currentDirectory + "\\" + path;
             if (string.IsNullOrEmpty(path))
             {
-                if (File.Exists(Constants.DefaultCampaignPath))
+                if (File.Exists(currentDirectory + "\\" + Constants.DefaultCampaignPath))
                 {
-                    yml = File.ReadAllText(Constants.DefaultCampaignPath);
+                    yml = File.ReadAllText(currentDirectory + "\\"  + Constants.DefaultCampaignPath);
                     if (string.IsNullOrEmpty(yml))
                     {
                         Console.WriteLine("[*] Error parsing default configuration, Aborting");
@@ -66,7 +68,7 @@ namespace EasyApply.Parsers
                 }
             }
             else
-                yml = File.ReadAllText(path);
+                yml = File.ReadAllText(full_path);
 
             var deserializer = new DeserializerBuilder().Build();
             return deserializer.Deserialize<YmlConfiguration>(yml);

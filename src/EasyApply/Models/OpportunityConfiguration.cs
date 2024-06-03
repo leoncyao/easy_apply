@@ -47,5 +47,7 @@ namespace EasyApply.Models
         public string[]? Whitelist { get; set; }
         public string[]? Blacklist { get; set; }
         public string[]? CompanyBlacklist { get; set; }
+        public string JobSearchUrl { get; set; }
+
     }
 }

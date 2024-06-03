@@ -39,6 +39,7 @@ using System;
 using OpenQA.Selenium;
 using OpenQA.Selenium.Chrome;
 using OpenQA.Selenium.Support.UI;
+using OpenQA.Selenium.Interactions;
 
 
 
@@ -97,7 +98,8 @@ namespace EasyApply.Campaigns.Indeed
             System.Diagnostics.Debug.WriteLine(Configuration.OpportunityConfiguration.Position);
             System.Diagnostics.Debug.WriteLine(Configuration.OpportunityConfiguration.Location);
             // encode indeed search url string
-            var uri = "https://ca.indeed.com/jobs?q=junior+software+developer&l=Toronto%2C+ON&from=searchOnHP&vjk=4203b76ebedee612";
+            var uri = Configuration.OpportunityConfiguration.JobSearchUrl;
+            //var uri = "https://ca.indeed.com/jobs?q=junior+software+developer&l=Toronto%2C+ON&from=searchOnHP&vjk=4203b76ebedee612";
             //var uri = "https://ca.indeed.com/jobs?q=entry+level+software+developer&l=Remote&from=searchOnHP&vjk=1dbe12f243c824bf";
             //var uri = String.Format("{0}/jobs?q={1}&l={2}",
             //    Constants.IndeedUrl,
@@ -190,7 +192,9 @@ namespace EasyApply.Campaigns.Indeed
                         //else if (true || (!opportunity.Applied && opportunity.EasyApply))
                         else if ((!opportunity.Applied && opportunity.EasyApply))
                         {
-                            //opportunity.Link = "https://www.indeed.com/viewjob?jk=cba79e809ed569cd&tk=1hteea6srir2s8c3&from=iaBackPress";
+                            //opportunity.Link = "https://www.indeed.com/viewjob?jk=ba6bb230ef1cca1a&tk=1hve48ackikdt85g&from=iaBackPress";
+
+
                             // submit an easy apply applicaiton
                             opportunity = await this.SubmitEasyApply(opportunity);
                             // null on error, reporting from exception
@@ -341,11 +345,11 @@ namespace EasyApply.Campaigns.Indeed
             {
                 // open new window and switch to handle
                 ((IJavaScriptExecutor)WebDriver).ExecuteScript($"window.open('{opportunity.Link}', 'NewTab')");
-                var wait = new WebDriverWait(WebDriver, TimeSpan.FromSeconds(2));
+                var wait = new WebDriverWait(WebDriver, TimeSpan.FromSeconds(1));
                 wait.Until(x => WebDriver.SwitchTo().Window(WebDriver.WindowHandles[1]));
 
                 // click to apply
-                wait = new WebDriverWait(WebDriver, TimeSpan.FromSeconds(2));
+                wait = new WebDriverWait(WebDriver, TimeSpan.FromSeconds(1));
                 Thread.Sleep(2000);
                 try
                 {
@@ -506,13 +510,85 @@ namespace EasyApply.Campaigns.Indeed
         {
             Thread.Sleep(2000);
             // picks uploaded pdf resume on indeed
-            var wait = new WebDriverWait(WebDriver, TimeSpan.FromSeconds(5));
-            wait.Until(x => x.FindElement(By.XPath(Constants.IndeedXpathPdfResume))).Click();
+            //var wait = new WebDriverWait(WebDriver, TimeSpan.FromSeconds(5));
 
-            ((IJavaScriptExecutor)WebDriver).ExecuteScript("window.scrollTo(0, document.body.scrollHeight - 150)");
-            var wait1 = new WebDriverWait(WebDriver, TimeSpan.FromSeconds(5));
+            var resume_button = WebDriver.FindElement(By.XPath(Constants.IndeedXpathPdfResume));
+
+            resume_button.Click();
+            //wait.Until(x => x.FindElement(By.XPath(Constants.IndeedXpathPdfResume))).Click();
+
+            //((IJavaScriptExecutor)WebDriver).ExecuteScript("window.scrollTo(0, document.body.scrollHeight - 250)");
             Thread.Sleep(1000);
-            wait1.Until(x => x.FindElement(By.XPath(Constants.IndeedXpathContinueButton))).Click();
+
+            //Actions actions = new Actions(WebDriver);
+
+
+            //((IJavaScriptExecut
+            // Simulate pressing the Space key
+            //actions.SendKeys(Keys.Space);
+            // Assuming WebDriver is your instance of IWebDriver
+
+            // Replace "xpath-expression" with your actual XPath expression
+            //string xpathExpression = "your-xpath-expression";
+
+            // Execute JavaScript to click on the element using its XPath
+            //var expression_string = "document.evaluate('" + Constants.IndeedXpathContinueButton + "', document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue.click();";
+
+            //Console.WriteLine($"{expression_string}");
+
+            //((IJavaScriptExecutor)WebDriver).ExecuteScript(
+            //    "document.evaluate('" + Constants.IndeedXpathContinueButton + "', document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue.click();"
+            //);
+
+            //var resume_button = WebDriver.FindElement(By.XPath(Constants.IndeedXpathPdfResume));
+
+            var continue_button = WebDriver.FindElement(By.XPath(Constants.IndeedXpathContinueButton));
+
+            try
+            {
+                continue_button.Click();
+            }
+            catch
+            {
+                ((IJavaScriptExecutor)WebDriver).ExecuteScript(
+"document.evaluate('" + Constants.IndeedXpathContinueButton.Replace("'", "\\'") + "', document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue.click();");
+
+            }
+            
+
+
+
+
+
+            // wasn't working on the resume page for some reason"//button[span[text()='Continue']]";
+            //var continue_button = WebDriver.FindElement(By.XPath(Constants.IndeedXpathContinueButton));
+            //var continue_button = WebDriver.FindElement(By.XPath("//*[@id=\"ia-container\"]/div/div[1]/div/div/div[2]/div[2]/div/div/main/div[3]/div/button[4]"));
+
+            //((IJavaScriptExecutor)WebDriver).ExecuteScript("document.getElementById('button-id').click();")
+
+            //wait.Until(ExpectedConditions.ElementToBeClickable(continue_button));
+
+            //if (continue_button.Enabled)
+            //{
+            //    Console.WriteLine("Element is enabled.");
+            //    //continue_button.Click();
+            //    // You can perform interactions with the element here
+            //}
+            //else
+            //{
+            //    Console.WriteLine("Element is disabled.");
+            //    // Handle the case where the element is not enabled
+            //}
+
+
+
+
+            //Console.WriteLine(continue_button.Text);
+            //Console.WriteLine(continue_button.GetAttribute("InnerHtml"));
+
+            //continue_button.Click();
+            //Thread.Sleep(2000);
+            //wait1.Until(x => x.FindElement(By.XPath(Constants.IndeedXpathContinueButton))).Click();
             Thread.Sleep(1000);
         }
 
