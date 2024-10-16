@@ -94,7 +94,7 @@ namespace EasyApply.Campaigns.Indeed
         /// </summary>
         public override void GetSearchPage(int? page)
         {
-            Thread.Sleep(2000);
+            Thread.Sleep(1000);
             System.Diagnostics.Debug.WriteLine(Configuration.OpportunityConfiguration.Position);
             System.Diagnostics.Debug.WriteLine(Configuration.OpportunityConfiguration.Location);
             // encode indeed search url string

@@ -25,9 +25,11 @@ OpportunityConfiguration:
     CompanyBlacklist:
     Whitelist:
     Blacklist:
-      - Sr.
-      - Senior
-      - Java
+      - CNC
+      # - Sr.
+      # - Senior
+      # - Java
+      # - 
     JobSearchUrl : "https://ca.indeed.com/jobs?q=junior+software+developer&l=Toronto%2C+ON&from=searchOnHP&vjk=4203b76ebedee612"
 
 IndeedConfiguration:
